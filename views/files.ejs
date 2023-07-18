@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Files</title>
+</head>
+<body>
+    <h1>Welcome, <%= username %>!</h1>
+    <h2>Your Files:</h2>
+    <ul>
+        <% files.forEach(function(file) { %>
+            <li><a href="<%= file.path %>"><%= file.originalName %></a></li>
+        <% }); %>
+    </ul>
+    <a href="/upload">Upload more files</a>
+</body>
+</html>

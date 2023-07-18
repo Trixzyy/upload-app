@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Uploads</title>
+</head>
+<body>
+    <h1>User Uploads</h1>
+    <h2>User: <%= user.username %> (<%= user.id %>)</h2>
+
+    <% if (user.files.length > 0) { %>
+        <ul>
+            <% user.files.forEach(function(file) { %>
+                <li><a href="/<%= file.path %>" target="_blank"><%= file.originalName %></a></li>
+            <% }); %>
+        </ul>
+    <% } else { %>
+        <p>No uploads found.</p>
+    <% } %>
+</body>
+</html>

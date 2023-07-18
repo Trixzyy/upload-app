@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+</head>
+<body>
+<h1>Welcome, admin!</h1>
+<h2>All Users:</h2>
+<ul>
+    <% users.forEach(function(user) { %>
+        <li>
+            <p>
+                <%= user.username %> (<%= user.id %>) - <%= user.files %> file(s) - <%= user.totalSize.toFixed(2) %> MB / <%= formatStorageLimit(user.storageLimit) %>
+                <button onclick="deleteUser('<%= user.id %>')">Delete User</button>
+                <button onclick="viewUserUploads('<%= user.id %>')">View Uploads</button> <!-- Add this button -->
+            </p>
+            <p>
+                Storage Limit: <%= formatStorageLimit(user.storageLimit) %>
+                <input type="number" id="storageLimit_<%= user.id %>" value="<%= user.storageLimit %>">
+                <button onclick="updateStorageLimit('<%= user.id %>')">Update Storage Limit</button>
+            </p>
+        </li>
+    <% }); %>
+</ul>
+
+<script>
+    function deleteUser(id) {
+        fetch('/admin/delete-user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-KEY': '<%= user.apiKey %>',
+                'X-User-ID': '<%= user.id %>'
+            },
+            body: JSON.stringify({ userID: id })
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(response.statusText);
+                location.reload();
+            })
+            .catch(alert);
+    }
+
+    function updateStorageLimit(id) {
+        const storageLimit = document.getElementById('storageLimit_' + id).value;
+        fetch('/admin/update-storage-limit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-KEY': '<%= user.apiKey %>',
+                'X-User-ID': '<%= user.id %>'
+            },
+            body: JSON.stringify({ userID: id, storageLimit: storageLimit })
+        })
+            .then(response => {
+                if (!response.ok) throw new Error(response.statusText);
+                location.reload();
+            })
+            .catch(alert);
+    }
+
+    function viewUserUploads(id) {
+        window.location.href = `/uploads?userId=${id}`;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "id": "1",
+  "username": "1",
+  "avatar": "a_3595ab182b98d7c4905aa2f8a2688f91",
+  "email": "doxil.dev@gmail.com",
+  "locale": "en-GB",
+  "isAdmin": false,
+  "apiKey": "1",
+  "uploadLimit": 500000000,
+  "storageLimit": 10000000000,
+  "files": [
+  ]
+}
