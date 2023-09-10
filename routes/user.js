@@ -6,10 +6,10 @@ const router = express.Router();
 function checkAuth(req, res, next) {
   if (req.isAuthenticated()) return next();
   res.cookie('redirectTo', req.originalUrl); // Store the originalUrl in cookie redirectTo
-  res.send(`
-    Hi there! <br></br>
-    Please <a href='/login'>login</a>`);
+  res.render('login');
 }
+ 
+
 
 router.get('/', checkAuth, function (req, res) {
   res.send(`Hello ${req.user.username}!<br></br><a href='/logout'>logout</a>`);

@@ -1,16 +1,140 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>My Files</title>
+    <title>
+        <%= username %>'s Files
+    </title>
+    <link rel="icon" href="../uploads/branding/tigerlake-tiger-icon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
-<body>
-    <h1>Welcome, <%= username %>!</h1>
-    <h2>Your Files:</h2>
-    <ul>
-        <% files.forEach(function(file) { %>
-            <li><a href="<%= file.path %>"><%= file.originalName %></a></li>
-        <% }); %>
-    </ul>
-    <a href="/upload">Upload more files</a>
+
+<body class="bg-white dark:bg-[#121212]">
+    <div class="min-h-full">
+        <nav class="bg-white dark:bg-[#1f1f1f] fixed w-full z-20 top-0 left-0 border-b border-gray-200 dark:border-gray-600"
+            x-data="{ isOpen: false, isOpenMobileMenu: false, closeMenu() { this.isOpen = false; }, }">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="flex h-16 items-center justify-between">
+                    <div class="flex items-center sm:content-center">
+                        <!-- Mobile menu toggle button -->
+                        <button @click="isOpenMobileMenu = !isOpenMobileMenu" class="md:hidden px-3 py-2 text-gray-500">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6h16M4 12h16m-7 6h7"></path>
+                            </svg>
+                        </button>
+                        <div class="flex-shrink-0 sm:alig flex items-center sm:items-center">
+                            <img class="h-10 w-10" src="../uploads/branding/tigerlake-tiger-icon.svg" alt="TigerLake">
+                        </div>
+                        <div class="hidden md:block">
+                            <div class="ml-10 flex items-baseline space-x-4">
+                                <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+                                <a href="#"
+                                    class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Home</a>
+                                <a href="#"
+                                    class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-sm font-medium">Upload</a>
+                                <a href="#" class="bg-zinc-700 text-white rounded-md px-3 py-2 text-sm font-medium"
+                                    aria-current="page">Files</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:block">
+                        <div class="relative ml-3">
+                            <div>
+                                <button @click="isOpen = !isOpen" @click.outside="closeMenu()"
+                                    class="relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                                    id="user-menu-button" :aria-expanded="isOpen.toString()" aria-haspopup="true">
+                                    <span class="absolute -inset-1.5"></span>
+                                    <span class="sr-only">Open user menu</span>
+                                    <img class="h-8 w-8 rounded-full"
+                                        src="https://cdn.discordapp.com/avatars/<%=id%>/<%= avatar %>" alt="User Avatar"
+                                        onload="this.style.opacity = 1" // Show image after loading
+                                        onerror="this.onerror=null; this.src='../uploads/assets/placeholders/avatar.svg';"
+                                        // Display placeholder on error
+                                        style="opacity: 0; transition: opacity 0.3s ease;">
+                                </button>
+                            </div>
+                            <div x-show.transition.scale.origin.top.right="isOpen" @click.outside="closeMenu()"
+                                role="menu" aria-orientation="vertical"
+                                :aria-labelledby="isOpen ? 'user-menu-button' : ''" tabindex="-1"
+                                x-transition:enter="transition ease-out duration-100 transform opacity-0 scale-95"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-100 transform opacity-100 scale-100"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95">
+                                <div x-show.transition.scale.origin.top.right="isOpen"
+                                    class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-[#1f1f1f] py-1 shadow-lg ring-1 ring-white ring-opacity-5 focus:outline-none"
+                                    role="menu" aria-orientation="vertical"
+                                    :aria-labelledby="isOpen ? 'user-menu-button' : ''" tabindex="-1">
+                                    <!-- Active: "bg-gray-100", Not Active: "" -->
+                                    <div class="px-5 py-3 transition ease-out duration-100 transform origin-top-right">
+                                        <span class="block text-1xl text-gray-100 font-bold">
+                                            <%= username %>
+                                        </span>
+                                        <span class="block text-sm  text-gray-300 truncate dark:text-gray-400">
+                                            <%= email %>
+                                        </span>
+                                    </div>
+                                    <a href="#"
+                                        class="transition ease-out duration-100 block px-5 py-2 text-sm text-gray-600 hover:text-black transform origin-top-right"
+                                        role="menuitem" tabindex="-1" id="user-menu-item-0">Your Files</a>
+                                    <a href="upload"
+                                        class="transition ease-out duration-100 block px-5 py-2 text-sm text-gray-600 hover:text-black transform origin-top-right"
+                                        role="menuitem" tabindex="-1" id="user-menu-item-0">Upload</a>
+                                    <a href="logout"
+                                        class="transition ease-out duration-100 block px-5 py-2 text-sm text-red-500 hover:text-red-400 transform origin-top-right"
+                                        role="menuitem" tabindex="-1" id="user-menu-item-0">Logout</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="md:hidden">
+                    <div x-show="isOpenMobileMenu" @click.away="isOpenMobileMenu = false"
+                        x-transition:enter="transition ease-out duration-100 transform opacity-0 scale-95"
+                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-75 transform opacity-100 scale-100"
+                        x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+                        <div class="px-2 pt-2 pb-3 space-y-1">
+                            <!-- Mobile Links -->
+                            <a href="#"
+                                class="block pl-3 pr-4 py-2 text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 focus:outline-none focus:text-gray-900 focus:bg-gray-50"
+                                role="menuitem">Home</a>
+                            <a href="#"
+                                class="block pl-3 pr-4 py-2 text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 focus:outline-none focus:text-gray-900 focus:bg-gray-50"
+                                role="menuitem">Upload</a>
+                            <a href="#"
+                                class="block pl-3 pr-4 py-2 text-base font-medium text-gray-900 bg-gray-100 hover:bg-gray-50 focus:outline-none focus:text-gray-900 focus:bg-gray-50"
+                                role="menuitem">Files</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+    </div>
+    <header class="mt-16">
+        <!-- Add mt-16 to create space below navbar -->
+        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <h1 class="text-gray-900 dark:text-gray-100 text-3xl font-bold tracking-tight font-mono">
+                <div id="greeting">
+                    <%= username %>!
+                </div>
+                <h1>
+                    <h2 class="text-gray-700 dark:text-gray-200 mt-4 text-xl font-semibold">Your Files:</h2>
+      </header>
+    <main class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8 content-center">
+        <div id="infinite-scroll-container" class="mt-4 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ">
+            <!-- Initial files will be loaded here -->
+        </div>
+        <a href="/upload" class="mt-4 text-blue-600 hover:underline">Upload more files</a>
+    </main>
+    </div>
 </body>
+<script src="../uploads/assets/js/files.js"></script>
+
 </html>

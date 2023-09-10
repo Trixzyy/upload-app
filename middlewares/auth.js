@@ -1,4 +1,6 @@
-const fs = require('fs');
+const mongoose = require('mongoose');
+const User = require('../models/User'); // Import Mongoose User model
+const { Types } = mongoose; // Import the Types module from Mongoose
 
 const hasRequestBody = function (req, res, next) {
   const contentLength = req.headers['content-length'];
@@ -11,48 +13,55 @@ const hasRequestBody = function (req, res, next) {
 function checkAuth(req, res, next) {
   if (req.isAuthenticated()) return next();
   res.cookie("redirectTo", req.originalUrl); // Store the originalUrl in cookie redirectTo
-  res.send(`
-    Hi there! <br></br>
-    Please <a href="/login">login</a>`);
+  res.render("login");
 }
 
-function apiAuth(req, res, next) {
+async function apiAuth(req, res, next) {
   const apiKey = req.get("X-API-KEY");
   const userID = req.get("X-User-ID");
-  const userFile = `./users/${userID}.json`;
 
-  if (fs.existsSync(userFile)) {
-    const user = JSON.parse(fs.readFileSync(userFile, "utf8"));
-    if (user.apiKey === apiKey) {
-      req.user = user;
-      next();
+  try {
+    const user = await User.findOne({ id: userID }); // Use "id" field for user lookup
+
+    if (user) {
+      if (user.apiKey === apiKey) {
+        req.user = user;
+        next();
+      } else {
+        res.status(403).send("Invalid API key.");
+      }
     } else {
-      res.status(403).send("Invalid API key.");
+      res.status(403).send("Invalid User ID.");
     }
-  } else {
-    res.status(403).send("Invalid User ID.");
+  } catch (error) {
+    console.error("Error checking API authentication:", error);
+    res.status(500).send("Internal Server Error");
   }
 }
 
-function checkAdmin(req, res, next) {
-  const userFile = `./users/${req.user.id}.json`;
-  if (fs.existsSync(userFile)) {
-    const user = JSON.parse(fs.readFileSync(userFile, "utf8"));
-    if (user.isAdmin) {
+
+async function checkAdmin(req, res, next) {
+  const userID = req.user._id; // Assuming req.user contains the user data
+
+  try {
+    if (!Types.ObjectId.isValid(userID)) {
+      return res.status(400).send('Invalid User ID.');
+    }
+
+    const user = await User.findById(userID);
+
+    if (user && user.isAdmin) {
       return next();
     } else {
       res
         .status(403)
         .send(
-          `You are not an administator. If you believe this is a mistake, please contact the server administrator.`
+          `You are not an administrator. If you believe this is a mistake, please contact the server administrator.`
         );
     }
-  } else {
-    res
-      .status(403)
-      .send(
-        `You are not an administator. If you believe this is a mistake, please contact the server administrator.`
-      );
+  } catch (error) {
+    console.error("Error checking admin status:", error);
+    res.status(500).send("Internal Server Error");
   }
 }
 

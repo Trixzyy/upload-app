@@ -1,103 +1,108 @@
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
 const router = express.Router();
-
 const { apiAuth, checkAuth, checkAdmin } = require('../middlewares/auth');
+const User = require('../models/User'); // Import your Mongoose User model
+const fs = require('fs');
 
-router.get('/admin', checkAuth, checkAdmin, function (req, res) {
-  const usersDir = `./users`;
-  const files = fs.readdirSync(usersDir);
-
-  const users = files.map((fileName) => {
-    const user = JSON.parse(
-      fs.readFileSync(path.join(usersDir, fileName), 'utf8')
+router.get('/admin', checkAuth, checkAdmin, async (req, res) => {
+  try {
+    const users = await User.find();
+    const userData = await Promise.all(
+      users.map(async (user) => {
+        const totalSize = await calculateTotalSize(user.files);
+        return {
+          username: user.username,
+          files: user.files.length,
+          totalSize: totalSize / 1024 / 1024,
+          id: user.id, // Use _id instead of id
+          storageLimit: user.storageLimit,
+        };
+      })
     );
-    user.storageLimit = user.storageLimit || 0; // Provide a default value if storageLimit is not defined
-    return user;
-  });
 
-  const userData = users.map((user) => {
-    const files = user.files;
-    const totalSize = files.reduce((total, fileObj) => {
-      const stats = fs.statSync(`./public/${fileObj.path}`);
-      return total + stats.size;
-    }, 0);
-    return {
-      username: user.username,
-      files: files.length,
-      totalSize: totalSize / 1024 / 1024,
-      id: user.id,
-      storageLimit: user.storageLimit,
-    };
-  });
-
-  res.render('admin', { users: userData, user: req.user, files: files.length });
-});
-
-router.get('/uploads', checkAuth, function(req, res) {
-  const userId = req.query.userId; // Get the userId from the query parameter
-  const userFile = `./users/${userId}.json`; // Use the userId to get the user's file
-
-  if (fs.existsSync(userFile)) {
-    const user = JSON.parse(fs.readFileSync(userFile, 'utf8'));
-    res.render('uploads', { user: user }); // Pass the user data to the 'uploads' view
-  } else {
-    res.status(404).send('User not found.');
-  }
-});
-
-router.post('/admin/delete-user', apiAuth, checkAdmin, function (req, res) {
-const { userID } = req.body;
-  const userFile = `./users/${userID}.json`;
-  if (fs.existsSync(userFile)) {
-    try {
-      const user = JSON.parse(fs.readFileSync(userFile, "utf8"));
-      user.files.forEach((fileObj) => {
-        const filePath = `./public/${fileObj.path}`;
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      });
-      fs.unlinkSync(userFile);
-      res.sendStatus(200);
-    } catch (error) {
-      console.error(error);
-      res.sendStatus(500);
-    }
-  } else {
-    res.status(404).send({
-      error: `User with ID ${userID} not found`,
+    res.render('admin', {
+      users: userData,
+      user: req.user,
+      files: users.length,
     });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
 
-router.post("/admin/update-storage-limit", apiAuth, checkAdmin, function (req, res) {
-    const { userID, storageLimit } = req.body;
-    const userFile = `./users/${userID}.json`;
-    if (fs.existsSync(userFile)) {
-      try {
-        const user = JSON.parse(fs.readFileSync(userFile, "utf8"));
-        const storageLimitBytes = parseFloat(storageLimit) * 1024 * 1024; // Convert storageLimit from MB to bytes
-        user.storageLimit = storageLimitBytes;
-        fs.writeFileSync(userFile, JSON.stringify(user), { flag: "w" });
-        res.status(200).send({
-          status: "success",
-          message: "Storage limit updated successfully",
-          newLimit: user.storageLimit,
-        });
-      } catch (error) {
-        console.error(error);
-        res.sendStatus(500);
-      }
+router.get('/uploads', checkAuth, checkAdmin, async (req, res) => {
+  const userId = req.query._id;
+  try {
+    const user = await User.findById(userId);
+    if (user) {
+      res.render('uploads', { user: user });
+    } else {
+      res.status(404).send('User not found.');
+    }
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+router.post('/admin/delete-user', apiAuth, checkAdmin, async (req, res) => {
+  const { _id } = req.body;
+  try {
+    const user = await User.findById(_id);
+    if (user) {
+      // Remove the user's session if it exists (You may need to implement session removal logic here)
+      await User.deleteOne({ _id: userID });
+      res.sendStatus(200);
+    } else {
+      res.status(404).send({
+        error: `User with ID ${userID} not found`,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
+
+router.post('/admin/update-storage-limit', apiAuth, checkAdmin, async (req, res) => {
+  console.log('Request body:', req.body); // Log the request body
+  const { storageLimit, userID } = req.body;
+  try {
+    const user = await User.findById(userID);
+    if (user) {
+      const storageLimitBytes = parseFloat(storageLimit) * 1024 * 1024;
+      user.storageLimit = storageLimitBytes;
+      await user.save();
+      res.status(200).send({
+        status: 'success',
+        message: 'Storage limit updated successfully',
+        newLimit: user.storageLimit,
+      });
     } else {
       res.status(404).send({
         error: `User with ID: ${userID} was not found`,
       });
     }
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
   }
-);
+});
 
 module.exports = function (app) {
   app.use('/', router);
 };
+
+// Helper function to calculate total file size
+async function calculateTotalSize(files) {
+  let totalSize = 0;
+  for (const fileObj of files) {
+    const filePath = `./public/${fileObj.path}`;
+    if (fs.existsSync(filePath)) {
+      const stats = fs.statSync(filePath);
+      totalSize += stats.size;
+    }
+  }
+  return totalSize;
+}

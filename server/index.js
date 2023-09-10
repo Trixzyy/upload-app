@@ -3,8 +3,25 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const path = require("path");
 const session = require("express-session");
+const mongoose = require('mongoose');
 
-const { secretCookieString, redirectURL } = require("../config.json");
+// Load config
+const { secretCookieString, redirectURL, mongoURI } = require("../config.json");
+
+
+// Connect to MongoDB
+mongoose.connect(mongoURI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+mongoose.connection.on('connected', () => {
+  console.log('Connected to MongoDB');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+});
 
 const app = express();
 
