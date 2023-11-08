@@ -1,10 +1,9 @@
 {
-    "mongoURI":"mongodb+srv://trixzy:Rq3FgLhh0CK5d1kJ@betterupload.efo83gt.mongodb.net/",
-    "redirectURL":"https://b956-80-193-46-145.ngrok-free.app",
-    "clientID" : "1124410445483221052",
-    "clientSecret" : "vIycmRQynzOaZLj9fL4ppxqrUKmL7Naq",
-    "secretCookieString": "12derf34g5h6j7k8l9m0nbv",
-    "webhookId":"1147221056302633011",
-    "webhookToken": "hhSEMRD5jmJZx4UEbo6KwmX1DTB40rNbPhuF3jQpYtygoGWQ2NOiPmKVkBD2NSkhAnkE"
-
+    "mongoURI":"MONGO_CONNECT_URI",
+    "redirectURL":"URL FOR DISCORD REDIRECT (BASE URL)",
+    "clientID" : "DISCORD_CLIENT_ID",
+    "clientSecret" : "DISCORD_CLIENT_SECRET",
+    "secretCookieString": "LONG STRING OF SOMETHING",
+    "webhookId":"WEBHOOK_ID",
+    "webhookToken": "WEBHOOK_TOKEN"
 }
